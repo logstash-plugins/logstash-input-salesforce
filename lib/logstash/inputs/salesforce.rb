@@ -1,7 +1,6 @@
 # encoding: utf-8
 require "logstash/inputs/base"
 require "logstash/namespace"
-require "socket" # for Socket.gethostname
 
 # This Logstash input plugin allows you to query Salesforce using SOQL and puts the results
 # into Logstash, one row per event. You can configure it to pull entire sObjects or only
@@ -48,7 +47,7 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
 
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
-  config :test, :validate => :boolean, :default => false
+  config :use_test_sandbox, :validate => :boolean, :default => false
   # Consumer Key for authentication. You must set up a new SFDC
   # connected app with oath to use this output. More information
   # can be found here:
@@ -81,46 +80,28 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   public
   def register
     require 'restforce'
-    @host = Socket.gethostname.force_encoding(Encoding::UTF_8)
-    if @test
-      @client = Restforce.new :host           => 'test.salesforce.com',
-                              :username       => @username,
-                              :password       => @password,
-                              :security_token => @security_token,
-                              :client_id      => @client_id,
-                              :client_secret  => @client_secret
-    else
-      @client = Restforce.new :username       => @username,
-                              :password       => @password,
-                              :security_token => @security_token,
-                              :client_id      => @client_id,
-                              :client_secret  => @client_secret
-    end
-    obj_desc = @client.describe(@sfdc_object_name)
+    obj_desc = client.describe(@sfdc_object_name)
     @sfdc_field_types = get_field_types(obj_desc)
-    if @sfdc_fields.empty?
-      @sfdc_fields = @sfdc_field_types.keys
-    end
-
+    @sfdc_fields = get_all_fields if @sfdc_fields.empty?
   end # def register
 
   public
   def run(queue)
-    results = @client.query(get_query())
-    if results and results.first
+    results = client.query(get_query())
+    if results && results.first
       results.each do |result|
         event = LogStash::Event.new()
         decorate(event)
-        event['host'] = @host
-        @sfdc_field_types.each do |field,field_type|
-          value = result.__send__(field)
-          event_key = field
-          event_key = underscore(field) if @to_underscores
+        @sfdc_fields.each do |field|
+          field_type = @sfdc_field_types[field]
+          value = result.send(field)
+          event_key = @to_underscores ? underscore(field) : field
           if not value.nil?
-            if field_type == 'datetime'
-              event[event_key] = Time.parse(value)
-            elsif field_type == 'date'
-              event[event_key] = Date.parse(value)
+            case field_type
+            when 'datetime'
+              event[event_key] = LogStash::Timestamp.parse(value)
+            when 'date'
+              event[event_key] = LogStash::Timestamp.parse(value)
             else
               event[event_key] = value
             end
@@ -131,30 +112,48 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
     end
   end # def run
 
-  public
-  def teardown
-  end # def teardown
+  private
+  def client
+    @client ||= Restforce.new client_options
+  end
+
+  private
+  def client_options
+    options = {
+      :username       => @username,
+      :password       => @password,
+      :security_token => @security_token,
+      :client_id      => @client_id,
+      :client_secret  => @client_secret
+    }
+    options.merge!({ :host => "test.salesforce.com" }) if @use_test_sandbox
+    return options
+  end
 
   private
   def get_query()
     query = ["SELECT",@sfdc_fields.join(','),
-             "FROM",@sfdc_object_name].join(' ')
-    query = [query,"WHERE",@sfdc_filters].join(' ') unless @sfdc_filters.empty?
-    @sfdc_filters += " ORDER BY LastModifiedDate DESC"
-    @logger.debug? && @logger.debug("SFDC Query", :query => query)
-    return query
+             "FROM",@sfdc_object_name]
+    query << ["WHERE",@sfdc_filters] unless @sfdc_filters.empty?
+    query << "ORDER BY LastModifiedDate DESC" if @sfdc_fields.include?('LastModifiedDate')
+    query_str = query.flatten.join(" ")
+    @logger.debug? && @logger.debug("SFDC Query", :query => query_str)
+    return query_str
   end
 
   private
   def get_field_types(obj_desc)
     field_types = {}
     obj_desc.fields.each do |f|
-      if @sfdc_fields.empty? or @sfdc_fields.include?(f.name)
-        field_types[f.name] = f.type
-      end
+      field_types[f.name] = f.type
     end
     @logger.debug? && @logger.debug("Field types", :field_types => field_types.to_s)
     return field_types
+  end
+
+  private
+  def get_all_fields
+    return @sfdc_field_types.keys
   end
 
   private
