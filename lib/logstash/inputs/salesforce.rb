@@ -48,6 +48,9 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
   config :use_test_sandbox, :validate => :boolean, :default => false
+  # By default, this uses the default Restforce API version.
+  # To override this, set this to something like "32.0" for example
+  config :api_version, :validate => :string, :required => false
   # Consumer Key for authentication. You must set up a new SFDC
   # connected app with oath to use this output. More information
   # can be found here:
@@ -127,6 +130,7 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
       :client_secret  => @client_secret
     }
     options.merge!({ :host => "test.salesforce.com" }) if @use_test_sandbox
+    options.merge!({ :api_version => @api_version }) if @api_version
     return options
   end
 
