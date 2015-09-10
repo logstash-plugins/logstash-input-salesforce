@@ -6,6 +6,9 @@ require "logstash/namespace"
 # into Logstash, one row per event. You can configure it to pull entire sObjects or only
 # specific fields.
 #
+# NOTE: This input plugin will stop after all the results of the query are processed and will
+# need to be re-run to fetch new results. It does not utilize the streaming API.
+#
 # In order to use this plugin, you will need to create a new SFDC Application using
 # oauth. More details can be found here:
 # https://help.salesforce.com/apex/HTViewHelpDoc?id=connected_app_create.htm
