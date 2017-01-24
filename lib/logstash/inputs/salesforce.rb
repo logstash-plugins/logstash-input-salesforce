@@ -105,11 +105,11 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
           if not value.nil?
             case field_type
             when 'datetime'
-              event[event_key] = LogStash::Timestamp.parse(value)
+              event.set(event_key, LogStash::Timestamp.parse(value))
             when 'date'
-              event[event_key] = LogStash::Timestamp.parse(value)
+              event.set(event_key, LogStash::Timestamp.parse(value))
             else
-              event[event_key] = value
+              event.set(event_key, value)
             end
           end
         end
