@@ -1,6 +1,7 @@
 # encoding: utf-8
 require "logstash/inputs/base"
 require "logstash/namespace"
+require "time"
 
 # This Logstash input plugin allows you to query Salesforce using SOQL and puts the results
 # into Logstash, one row per event. You can configure it to pull entire sObjects or only
@@ -104,10 +105,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
           event_key = @to_underscores ? underscore(field) : field
           if not value.nil?
             case field_type
-            when 'datetime'
-              event.set(event_key, LogStash::Timestamp.parse(value))
-            when 'date'
-              event.set(event_key, LogStash::Timestamp.parse(value))
+            when 'datetime', 'date'
+              event.set(event_key, format_time(value))
             else
               event.set(event_key, value)
             end
@@ -171,6 +170,14 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
        gsub(/([a-z\d])([A-Z])/,'\1_\2').
        tr("-", "_").
        downcase
+  end
+
+  private
+  def format_time(string)
+    # salesforce can use different time formats so until we have a higher
+    # performance requirement we can just use Time.parse
+    # otherwise it's possible to use a sequence of DateTime.strptime, for example
+    LogStash::Timestamp.new(Time.parse(string))
   end
 
 end # class LogStash::Inputs::Salesforce
