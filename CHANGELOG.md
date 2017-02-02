@@ -1,3 +1,6 @@
+# 3.0.1
+  - Correctly format time from salesforce events
+
 # 3.0.0
   - Update dependency of logstash-core-plugin-api to ">= 1.60", "<= 2.99" (for logstash 5.x compatibility)
   - Update event api to .set and .get accessors
