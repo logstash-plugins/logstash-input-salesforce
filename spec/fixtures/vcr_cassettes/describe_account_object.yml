@@ -1,0 +1,83 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://login.salesforce.com/services/oauth2/token
+    body:
+      encoding: US-ASCII
+      string: grant_type=password&client_id=xxxx&client_secret=xxxx&username=xxxx&password=xxxx
+    headers:
+      User-Agent:
+      - Faraday v0.9.1
+      Content-Type:
+      - application/x-www-form-urlencoded
+      Accept:
+      - '*/*'
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 27 Aug 2015 23:57:42 GMT
+      Set-Cookie:
+      - BrowserId=xxxx;Path=/;Domain=.salesforce.com;Expires=Mon, 26-Oct-2015 23:57:42 GMT
+      Expires:
+      - Thu, 01 Jan 1970 00:00:00 GMT
+      Pragma:
+      - no-cache
+      Cache-Control:
+      - no-cache, no-store
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: US-ASCII
+      string: '{"id":"https://login.salesforce.com/id/xxxx/xxxx","issued_at":"1440719862904","token_type":"Bearer","instance_url":"https://eu2.salesforce.com","signature":"xxxx","access_token":"xxxx"}'
+    http_version:
+  recorded_at: Thu, 27 Aug 2015 23:57:43 GMT
+- request:
+    method: get
+    uri: https://eu2.salesforce.com/services/data/v26.0/sobjects/Account/describe
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v0.9.1
+      Authorization:
+      - OAuth xxxx
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - '*/*'
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 27 Aug 2015 23:57:44 GMT
+      Set-Cookie:
+      - BrowserId=xxxx;Path=/;Domain=.salesforce.com;Expires=Mon, 26-Oct-2015 23:57:44 GMT
+      Expires:
+      - Thu, 01 Jan 1970 00:00:00 GMT
+      Sforce-Limit-Info:
+      - api-usage=211068/451000
+      Org.eclipse.jetty.server.include.etag:
+      - 5fb54cb6
+      Last-Modified:
+      - Thu, 27 Aug 2015 22:36:55 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Etag:
+      - 5fb54cb-gzip"
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: UTF-8
+      string: '{"activateable":false,"childRelationships":[{"autoNumber":false,"byteLength":18,"calculated":false,"calculatedFormula":null,"cascadeDelete":false,"caseSensitive":false,"controllerName":null,"createable":true,"custom":false,"defaultValue":null,"defaultValueFormula":null,"defaultedOnCreate":true,"dependentPicklist":false,"deprecatedAndHidden":false,"digits":0,"displayLocationInDecimal":false,"externalId":false,"filterable":true,"groupable":true,"htmlFormatted":false,"idLookup":false,"inlineHelpText":null,"label":"Owner ID","length":18,"name":"OwnerId","nameField":false,"namePointing":false,"nillable":false,"permissionable":false,"picklistValues":[],"precision":0,"referenceTo":["User"],"relationshipName":"Owner","relationshipOrder":null,"restrictedDelete":false,"restrictedPicklist":false,"scale":0,"soapType":"tns:ID","sortable":true,"type":"reference","unique":false,"updateable":true,"writeRequiresMasterRead":false}],"fields":[{"autoNumber":false,"byteLength":765,"calculated":false,"calculatedFormula":null,"cascadeDelete":false,"caseSensitive":false,"controllerName":null,"createable":true,"custom":false,"defaultValue":null,"defaultValueFormula":null,"defaultedOnCreate":false,"dependentPicklist":false,"deprecatedAndHidden":false,"digits":0,"displayLocationInDecimal":false,"externalId":false,"filterable":true,"groupable":true,"htmlFormatted":false,"idLookup":false,"inlineHelpText":null,"label":"Account Name","length":255,"name":"Name","nameField":true,"namePointing":false,"nillable":false,"permissionable":false,"picklistValues":[],"precision":0,"referenceTo":[],"relationshipName":null,"relationshipOrder":null,"restrictedDelete":false,"restrictedPicklist":false,"scale":0,"soapType":"xsd:string","sortable":true,"type":"string","unique":false,"updateable":true,"writeRequiresMasterRead":false}],"keyPrefix":"001","label":"Account","labelPlural":"Accounts","layoutable":true,"listviewable":null,"lookupLayoutable":null,"mergeable":true,"name":"Account","queryable":true,"recordTypeInfos":[],"replicateable":true,"retrieveable":true,"searchLayoutable":null,"searchable":true,"triggerable":true,"undeletable":true,"updateable":true,"urls":{"uiEditTemplate":"https: //xxx.salesforce.com/{ID}/e","sobject":"/services/data/v26.0/sobjects/Lead","uiDetailTemplate":"https://xxx.salesforce.com/{ID}","describe":"/services/data/v26.0/sobjects/Lead/describe","rowTemplate":"/services/data/v26.0/sobjects/Lead/{ID}","uiNewRecord":"https://xxx.salesforce.com/00Q/e"}}'
+    http_version:
+  recorded_at: Thu, 27 Aug 2015 23:57:44 GMT
+recorded_with: VCR 2.9.3

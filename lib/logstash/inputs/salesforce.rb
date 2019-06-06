@@ -101,7 +101,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
         decorate(event)
         @sfdc_fields.each do |field|
           field_type = @sfdc_field_types[field]
-          value = result.send(field)
+          field_symbol = field.split('.').map(&:to_sym)
+          value = result.dig(*field_symbol)
           event_key = @to_underscores ? underscore(field) : field
           if not value.nil?
             case field_type

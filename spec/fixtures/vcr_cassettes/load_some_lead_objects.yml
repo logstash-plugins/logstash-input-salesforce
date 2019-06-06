@@ -86,7 +86,7 @@ http_interactions:
   recorded_at: Thu, 27 Aug 2015 23:57:44 GMT
 - request:
     method: get
-    uri: https://eu2.salesforce.com/services/data/v26.0/query?q=SELECT%20Id,IsDeleted,LastName,FirstName,Salutation%20FROM%20Lead%20WHERE%20Email%20LIKE%20'%25@elastic.co'
+    uri: https://eu2.salesforce.com/services/data/v26.0/query?q=SELECT%20Id,IsDeleted,LastName,FirstName,Salutation%20FROM%20Lead%20WHERE%20Email%20LIKE%20%27%25@elastic.co%27
     body:
       encoding: US-ASCII
       string: ''

@@ -119,5 +119,73 @@ RSpec.describe LogStash::Inputs::Salesforce do
         end
       end
     end
+
+    context "describe Account object" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => "",
+          "username" => "",
+          "password" => "",
+          "security_token" => "",
+          "sfdc_object_name" => "Account"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      let(:expected_fields_result) { ["Name"] }
+      let(:expected_types_result) { [["Name", "string"]] }
+      subject { input }
+      it "loads the Account object fields" do
+        VCR.use_cassette("describe_account_object",:decode_compressed_response => true) do
+          subject.register
+          expect(subject.instance_variable_get(:@sfdc_field_types)).to match_array(expected_types_result)
+          expect(subject.instance_variable_get(:@sfdc_fields)).to match_array(expected_fields_result)
+        end
+      end
+      context "load Account objects" do
+        let(:options) do
+          {
+            "client_id" => "",
+            "client_secret" => "",
+            "username" => "",
+            "password" => "",
+            "security_token" => "",
+            "sfdc_object_name" => "Account",
+            "sfdc_fields" => ["Name", "Owner.Name"],
+            "sfdc_filters" => "Owner.Name = 'Elastic'"
+          }
+        end
+        let(:input) { LogStash::Inputs::Salesforce.new(options) }
+        subject { input }
+        let(:queue) { [] }
+        let(:expected_query_field_result) { [{ "key" => "Name", "value" => "Logstash"}, {"key" => "Owner.Name", "value" => "Elastic"}] }
+        it "loads some account records" do
+          VCR.use_cassette("load some account objects",:decode_compressed_response => true) do
+            subject.register
+            subject.run(queue)
+            expect(queue.length).to eq(1)
+            e = queue.pop
+            expected_query_field_result.each do |f|
+              event_hash = e.to_hash
+              expect(event_hash).to include(f['key'])
+              expect(event_hash[f['key']]).to eq(f['value'])
+            end
+          end
+        end
+      end
+    end
   end
 end
