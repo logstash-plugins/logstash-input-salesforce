@@ -2,6 +2,7 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/inputs/salesforce"
 require "vcr"
 require 'json'
+require "timecop"
 
 RSpec.describe LogStash::Inputs::Salesforce do
   describe "inputs/salesforce" do
@@ -115,6 +116,23 @@ RSpec.describe LogStash::Inputs::Salesforce do
             expected_fields_result.each do |f|
               expect(e.to_hash).to include(f)
             end
+          end
+        end
+
+        it "runs when scheduled" do
+          VCR.use_cassette("load some lead objects",:decode_compressed_response => true) do
+            subject.register
+            Timecop.travel(Time.new(2000))
+            Timecop.scale(60)
+            runner = Thread.new do
+              subject.run(queue)
+            end
+            sleep 3
+            subject.stop
+            runner.kill
+            runner.join
+            expect(queue.size).to eq(3)
+            Timecop.return
           end
         end
       end
