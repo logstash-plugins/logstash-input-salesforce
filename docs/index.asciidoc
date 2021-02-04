@@ -39,6 +39,11 @@ https://help.salesforce.com/apex/HTViewHelpDoc?id=user_security_token.htm
 In addition to specifying an sObject, you can also supply a list of API fields
 that will be used in the SOQL query.
 
+==== Salesforce sandbox and HTTP proxy
+
+* By default, the plugin connects to `login.salesforce.com`. To use a Salesforce sandbox, set the `SALESFORCE_HOST` environment variable with the desired host value (e.g `export SALESFORCE_HOST="test.salesforce.com"`).
+* If your infrastructure uses a HTTP proxy, you can set the `SALESFORCE_PROXY_URI` environment variable with the desired URI value (e.g `export SALESFORCE_PROXY_URI="http://proxy.example.com:123"`).
+
 ==== Example
 This example prints all the Salesforce Opportunities to standard out
 
