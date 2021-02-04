@@ -1,3 +1,6 @@
+## 3.0.7
+  - Added description for `SALESFORCE_PROXY_URI` environment variable.
+
 ## 3.0.6
   - Make sure 'recent' restforce dependency is used (to help dependency resolution)
 
