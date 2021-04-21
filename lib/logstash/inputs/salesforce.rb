@@ -49,6 +49,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   config_name "salesforce"
   default :codec, "plain" #not used
 
+  # Set this to true to connect via the Tooling API
+  config :use_tooling_api, :validate => :boolean, :default => false
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
   config :use_test_sandbox, :validate => :boolean, :default => false
@@ -119,7 +121,11 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
 
   private
   def client
-    @client ||= Restforce.new client_options
+    if @use_tooling_api
+      @client ||= Restforce.tooling client_options
+    else
+      @client ||= Restforce.new client_options
+    end
   end
 
   private
