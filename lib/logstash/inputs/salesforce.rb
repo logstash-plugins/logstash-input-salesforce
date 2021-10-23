@@ -49,7 +49,11 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   config_name "salesforce"
   default :codec, "plain" #not used
 
-  # Set this to true to connect via the Tooling API
+  # Set this to true to connect via the Tooling API instead of the Rest API.
+  # This allows accessing information like Apex Unit Test Results,
+  # Flow Coverage Results, Security Health Check Risks, etc.
+  # See https://developer.salesforce.com/docs/atlas.en-us.api_tooling.meta/api_tooling
+  # for more details about the Tooling API
   config :use_tooling_api, :validate => :boolean, :default => false
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
