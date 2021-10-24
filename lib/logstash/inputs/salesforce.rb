@@ -52,8 +52,10 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
   config :use_test_sandbox, :validate => :boolean, :default => false
-  # Set this to the custom MyDomain url of your sfdc instance
-  # logging in through instance url
+  # Set this to the instance url of the sfdc instance you want
+  # to connect to already during login. If you have configured
+  # a MyDomain in your sfdc instance you would provide
+  # <mydomain>.my.salesforce.com here.
   config :sfdc_instance_url, :validate => :string, :required => false
   # By default, this uses the default Restforce API version.
   # To override this, set this to something like "32.0" for example
