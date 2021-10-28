@@ -161,6 +161,25 @@ RSpec.describe LogStash::Inputs::Salesforce do
           expect(subject.instance_variable_get(:@sfdc_fields)).to match_array(expected_fields_result)
         end
       end
+      context "...but not use_test_sandbox" do
+        let(:options) do
+          {
+            "client_id" => "",
+            "client_secret" => "",
+            "username" => "",
+            "password" => "",
+            "security_token" => "",
+            "sfdc_instance_url" => "my-domain.my.salesforce.com",
+            "sfdc_object_name" => "Lead",
+            "use_test_sandbox" => true
+          }
+        end
+        let (:input) { LogStash::Inputs::Salesforce.new(options) }
+        subject { input }
+        it "should raise a LogStash::ConfigurationError" do
+          expect { subject.register }.to raise_error(::LogStash::ConfigurationError)
+        end
+      end
     end
   end
 end

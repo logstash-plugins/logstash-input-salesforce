@@ -136,8 +136,14 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
       :client_id      => @client_id,
       :client_secret  => @client_secret
     }
-    options.merge!({ :host => @sfdc_instance_url }) if @sfdc_instance_url
-    options.merge!({ :host => "test.salesforce.com" }) if @use_test_sandbox and not @sfdc_instance_url
+    # configure the endpoint to which restforce connects to for authentication
+    if @sfdc_instance_url && @use_test_sandbox
+      raise ::LogStash::ConfigurationError.new("Both \"use_test_sandbox\" and \"sfdc_instance_url\" can't be set simultaneously. Please specify either \"use_test_sandbox\" or \"sfdc_instance_url\"")
+    elsif @sfdc_instance_url
+      options.merge!({ :host => @sfdc_instance_url })
+    elsif @use_test_sandbox
+      options.merge!({ :host => "test.salesforce.com" })
+    end
     options.merge!({ :api_version => @api_version }) if @api_version
     return options
   end
