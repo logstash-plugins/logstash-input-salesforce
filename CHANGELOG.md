@@ -1,3 +1,6 @@
+## 3.1.0
+  - Added `use_tooling_api` configuration to connect to the Salesforce Tooling API instead of the regular Rest API.
+
 ## 3.0.7
   - Added description for `SALESFORCE_PROXY_URI` environment variable.
 
