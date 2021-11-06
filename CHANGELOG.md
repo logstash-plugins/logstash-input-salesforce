@@ -1,3 +1,6 @@
+## 3.1.0
+  - Added `sfdc_instance_url` configuration to connect to a specific url.
+
 ## 3.0.7
   - Added description for `SALESFORCE_PROXY_URI` environment variable.
 
