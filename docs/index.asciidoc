@@ -168,9 +168,9 @@ adding field1 = value1 AND field2 = value2 AND...
   * Value type is <<string,string>>
   * There is no default value for this setting.
 
-The url of a salesforce instance. Provide this if you already
-during login want to connect to your instance url instead of
-`login.salesforce.com` or `test.salesforce.com`.
+The url of a Salesforce instance. Provide the url if you want to connect
+to your Salesforce instance instead of
+`login.salesforce.com` or `test.salesforce.com` at login.
 
 Use either this or the `use_test_sandbox` configuration option
 but not both to configure the url to which the plugin connects to.
