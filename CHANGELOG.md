@@ -1,5 +1,7 @@
 ## 3.1.0
   - Added `use_tooling_api` configuration to connect to the Salesforce Tooling API instead of the regular Rest API.
+  - Added `sfdc_instance_url` configuration to connect to a specific url.
+  - Switch to restforce v5+ (for logstash 8.x compatibility)
 
 ## 3.0.7
   - Added description for `SALESFORCE_PROXY_URI` environment variable.

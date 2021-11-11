@@ -58,6 +58,11 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
   config :use_test_sandbox, :validate => :boolean, :default => false
+  # Set this to the instance url of the sfdc instance you want
+  # to connect to already during login. If you have configured
+  # a MyDomain in your sfdc instance you would provide
+  # <mydomain>.my.salesforce.com here.
+  config :sfdc_instance_url, :validate => :string, :required => false
   # By default, this uses the default Restforce API version.
   # To override this, set this to something like "32.0" for example
   config :api_version, :validate => :string, :required => false
@@ -141,7 +146,14 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
       :client_id      => @client_id,
       :client_secret  => @client_secret
     }
-    options.merge!({ :host => "test.salesforce.com" }) if @use_test_sandbox
+    # configure the endpoint to which restforce connects to for authentication
+    if @sfdc_instance_url && @use_test_sandbox
+      raise ::LogStash::ConfigurationError.new("Both \"use_test_sandbox\" and \"sfdc_instance_url\" can't be set simultaneously. Please specify either \"use_test_sandbox\" or \"sfdc_instance_url\"")
+    elsif @sfdc_instance_url
+      options.merge!({ :host => @sfdc_instance_url })
+    elsif @use_test_sandbox
+      options.merge!({ :host => "test.salesforce.com" })
+    end
     options.merge!({ :api_version => @api_version }) if @api_version
     return options
   end
