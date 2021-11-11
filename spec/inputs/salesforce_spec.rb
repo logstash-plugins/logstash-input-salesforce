@@ -119,5 +119,67 @@ RSpec.describe LogStash::Inputs::Salesforce do
         end
       end
     end
+
+    context "use sfdc instance url" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => "",
+          "username" => "",
+          "password" => "",
+          "security_token" => "",
+          "sfdc_instance_url" => "my-domain.my.salesforce.com",
+          "sfdc_object_name" => "Lead"
+        }
+      end
+      let (:input) { LogStash::Inputs::Salesforce.new(options) }
+      let(:expected_fields_result) { ["Id", "IsDeleted",
+                                      "LastName", "FirstName", "Salutation"] }
+      let(:expected_types_result) { [["FirstName", "string"],
+                                     ["Id", "id"],
+                                     ["IsDeleted", "boolean"],
+                                     ["LastName", "string"],
+                                     ["Salutation", "picklist"]] }
+      subject { input }
+      it "logs into sfdc instance url" do
+        VCR.use_cassette("login_into_mydomain", :decode_compressed_response => true) do
+          subject.register
+          expect(subject.instance_variable_get(:@sfdc_field_types)).to match_array(expected_types_result)
+          expect(subject.instance_variable_get(:@sfdc_fields)).to match_array(expected_fields_result)
+        end
+      end
+      context "...but not use_test_sandbox" do
+        let(:options) do
+          {
+            "client_id" => "",
+            "client_secret" => "",
+            "username" => "",
+            "password" => "",
+            "security_token" => "",
+            "sfdc_instance_url" => "my-domain.my.salesforce.com",
+            "sfdc_object_name" => "Lead",
+            "use_test_sandbox" => true
+          }
+        end
+        let (:input) { LogStash::Inputs::Salesforce.new(options) }
+        subject { input }
+        it "should raise a LogStash::ConfigurationError" do
+          expect { subject.register }.to raise_error(::LogStash::ConfigurationError)
+        end
+      end
+    end
   end
 end

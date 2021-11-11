@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'logstash-input-salesforce'
-  s.version         = '3.0.7'
+  s.version         = '3.1.0'
   s.licenses = ['Apache License (2.0)']
   s.summary = "Creates events based on a Salesforce SOQL query"
   s.description     = "This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program"
@@ -19,11 +19,11 @@ Gem::Specification.new do |s|
 
   # Gem dependencies
   s.add_runtime_dependency "logstash-core-plugin-api", ">= 1.60", "<= 2.99"
-  s.add_runtime_dependency 'logstash-codec-plain'
-  s.add_runtime_dependency 'restforce', '>= 3.2', '< 5'
+  s.add_runtime_dependency "logstash-codec-plain"
+  s.add_runtime_dependency "restforce", ">= 5", "< 5.2"
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency 'vcr'
   s.add_development_dependency 'webmock'
   s.add_development_dependency 'json'
-  s.add_development_dependency 'public_suffix', '~> 1.4.6' # required due to ruby < 2.0
+  s.add_development_dependency 'public_suffix', '>= 1.4' # required due to ruby < 2.0
 end
