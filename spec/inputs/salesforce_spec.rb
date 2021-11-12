@@ -214,9 +214,8 @@ RSpec.describe LogStash::Inputs::Salesforce do
         VCR.use_cassette("describe_apex_test_run_result_object",:decode_compressed_response => true) do
           subject.register
           expect(subject.send(:client).send(:api_path, "query")).to eq('/services/data/v52.0/tooling/query')
-        }
+        end
       end
-
     end
   end
 end
