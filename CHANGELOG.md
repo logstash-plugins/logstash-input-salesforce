@@ -1,5 +1,8 @@
+## 3.2.0
+  - Added `use_tooling_api` configuration to connect to the Salesforce Tooling API instead of the regular Rest API. [#26](https://github.com/logstash-plugins/logstash-input-salesforce/pull/26)
+
 ## 3.1.0
-  - Added `sfdc_instance_url` configuration to connect to a specific url.
+  - Added `sfdc_instance_url` configuration to connect to a specific url. [#28](https://github.com/logstash-plugins/logstash-input-salesforce/pull/28)
   - Switch to restforce v5+ (for logstash 8.x compatibility)
 
 ## 3.0.7

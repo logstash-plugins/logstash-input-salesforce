@@ -181,5 +181,41 @@ RSpec.describe LogStash::Inputs::Salesforce do
         end
       end
     end
+
+    context "use Tooling Api" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "api_version" => "52.0",
+          "client_id" => "",
+          "client_secret" => "",
+          "username" => "",
+          "password" => "",
+          "security_token" => "",
+          "use_tooling_api" => true,
+          "sfdc_object_name" => "ApexTestRunResult"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      it "should use the Tooling Api Query resource path" do
+        VCR.use_cassette("describe_apex_test_run_result_object",:decode_compressed_response => true) do
+          subject.register
+          expect(subject.send(:client).send(:api_path, "query")).to eq('/services/data/v52.0/tooling/query')
+        end
+      end
+    end
   end
 end
