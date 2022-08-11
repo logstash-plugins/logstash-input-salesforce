@@ -92,6 +92,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # SOQL statement. Additional fields can be filtered on by
   # adding field1 = value1 AND field2 = value2 AND...
   config :sfdc_filters, :validate => :string, :default => ""
+  # RESTForce request timeout in seconds.
+  config :timeout, :validate => :number, :default => 60, :required => false
   # Setting this to true will convert SFDC's NamedFields__c to named_fields__c
   config :to_underscores, :validate => :boolean, :default => false
 
@@ -144,7 +146,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
       :password       => @password,
       :security_token => @security_token,
       :client_id      => @client_id,
-      :client_secret  => @client_secret
+      :client_secret  => @client_secret,
+      :timeout        => @timeout
     }
     # configure the endpoint to which restforce connects to for authentication
     if @sfdc_instance_url && @use_test_sandbox
