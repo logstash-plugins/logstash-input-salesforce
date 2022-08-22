@@ -66,6 +66,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # By default, this uses the default Restforce API version.
   # To override this, set this to something like "32.0" for example
   config :api_version, :validate => :string, :required => false
+  # RESTForce request timeout in seconds.
+  config :timeout, :validate => :number, :required => false
   # Consumer Key for authentication. You must set up a new SFDC
   # connected app with oath to use this output. More information
   # can be found here:
@@ -92,8 +94,6 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # SOQL statement. Additional fields can be filtered on by
   # adding field1 = value1 AND field2 = value2 AND...
   config :sfdc_filters, :validate => :string, :default => ""
-  # RESTForce request timeout in seconds.
-  config :timeout, :validate => :number, :default => 60, :required => false
   # Setting this to true will convert SFDC's NamedFields__c to named_fields__c
   config :to_underscores, :validate => :boolean, :default => false
 
@@ -108,22 +108,22 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   public
   def run(queue)
     results = client.query(get_query())
+    @logger.debug("Query results:", :results => results)
     if results && results.first
       results.each do |result|
         event = LogStash::Event.new()
         decorate(event)
         @sfdc_fields.each do |field|
-          field_type = @sfdc_field_types[field]
+          # PARENT.CHILD => PARENT
+          # function(field) field => field
+          field = field.split(/\./).first.split(/\s/).last
           value = result.send(field)
+
+          # Remove RESTForce's nested 'attributes' field for reference fields
+          value.is_a?(Hash) ? value = value.tap { |hash| hash.delete(:attributes)} : value
+
           event_key = @to_underscores ? underscore(field) : field
-          if not value.nil?
-            case field_type
-            when 'datetime', 'date'
-              event.set(event_key, format_time(value))
-            else
-              event.set(event_key, value)
-            end
-          end
+          event.set(event_key, value)
         end
         queue << event
       end
@@ -158,6 +158,7 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
       options.merge!({ :host => "test.salesforce.com" })
     end
     options.merge!({ :api_version => @api_version }) if @api_version
+    options.merge!({ :timeout => @timeout }) if @timeout
     return options
   end
 

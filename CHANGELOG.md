@@ -1,3 +1,10 @@
+## 3.3.0
+  - feat: Added `timeout` configuration to control RESTForce timeout settings (defaults to `60`)
+  - feat: Added support for reference fields (`parent__r.child`)
+  - feat: Added support for built-in SOQL functions (etc. `toLabel(field__c) field`)
+  - refactor: Removed field_type inferring (elastic can infer it / logstash mapping can be configured for special cases)
+  - fix: update Apache licence to suppress compiling warning
+
 ## 3.2.1
   - Changes sensitive configs type to Password for better protection from leaks in debug logs. [#35](https://github.com/logstash-plugins/logstash-input-salesforce/pull/35)
 
