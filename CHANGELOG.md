@@ -1,3 +1,10 @@
+## 4.0.0
+  - refactor: Change behavior to support SOQL queries
+  - feat: Include deleted records
+
+## 3.4.0
+  - feat: Add support for plain SOQL query
+
 ## 3.3.0
   - feat: Added `timeout` configuration to control RESTForce timeout settings (defaults to `60`)
   - feat: Added support for reference fields (`parent__r.child`)
