@@ -33,7 +33,7 @@ require "time"
 #     username => 'email@example.com'
 #     password => 'super-secret'
 #     security_token => 'SECURITY TOKEN FOR THIS USER'
-#     sfdc_object_name => 'Opportunity'
+#     sfdc_soql_query => 'SELECT Id FROM Account'
 #   }
 # }
 #
@@ -58,6 +58,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # Set this to true to connect to a sandbox sfdc instance
   # logging in through test.salesforce.com
   config :use_test_sandbox, :validate => :boolean, :default => false
+  # Include deleted records
+  config :include_deleted, :validate => :boolean, :default => false
   # Set this to the instance url of the sfdc instance you want
   # to connect to already during login. If you have configured
   # a MyDomain in your sfdc instance you would provide
@@ -66,6 +68,8 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # By default, this uses the default Restforce API version.
   # To override this, set this to something like "32.0" for example
   config :api_version, :validate => :string, :required => false
+  # RESTForce request timeout in seconds.
+  config :timeout, :validate => :number, :required => false
   # Consumer Key for authentication. You must set up a new SFDC
   # connected app with oath to use this output. More information
   # can be found here:
@@ -83,45 +87,41 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # generting a security token, see:
   # https://help.salesforce.com/apex/HTViewHelpDoc?id=user_security_token.htm
   config :security_token, :validate => :string, :required => true
-  # The name of the salesforce object you are creating or updating
-  config :sfdc_object_name, :validate => :string, :required => true
-  # These are the field names to return in the Salesforce query
-  # If this is empty, all fields are returned.
-  config :sfdc_fields, :validate => :array, :default => []
-  # These options will be added to the WHERE clause in the
-  # SOQL statement. Additional fields can be filtered on by
-  # adding field1 = value1 AND field2 = value2 AND...
-  config :sfdc_filters, :validate => :string, :default => ""
+  # Plain SOQL query
+  config :sfdc_soql_query, :validate => :string, :required => true
   # Setting this to true will convert SFDC's NamedFields__c to named_fields__c
   config :to_underscores, :validate => :boolean, :default => false
 
   public
   def register
     require 'restforce'
-    obj_desc = client.describe(@sfdc_object_name)
-    @sfdc_field_types = get_field_types(obj_desc)
-    @sfdc_fields = get_all_fields if @sfdc_fields.empty?
+    @sfdc_fields = get_sfdc_fields
   end # def register
 
   public
   def run(queue)
-    results = client.query(get_query())
+    if @include_deleted
+      results = client.query_all(@sfdc_soql_query)
+    else
+      results = client.query(@sfdc_soql_query)
+    end
+
+    @logger.debug("Query results:", :results => results)
     if results && results.first
       results.each do |result|
         event = LogStash::Event.new()
         decorate(event)
         @sfdc_fields.each do |field|
-          field_type = @sfdc_field_types[field]
+          # PARENT.CHILD => PARENT
+          # function(field) field => field
+          field = field.split(/\./).first.split(/\s/).last
           value = result.send(field)
+
+          # Remove RESTForce's nested 'attributes' field for reference fields
+          value.is_a?(Hash) ? value = value.tap { |hash| hash.delete(:attributes)} : value
+
           event_key = @to_underscores ? underscore(field) : field
-          if not value.nil?
-            case field_type
-            when 'datetime', 'date'
-              event.set(event_key, format_time(value))
-            else
-              event.set(event_key, value)
-            end
-          end
+          event.set(event_key, value)
         end
         queue << event
       end
@@ -155,33 +155,17 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
       options.merge!({ :host => "test.salesforce.com" })
     end
     options.merge!({ :api_version => @api_version }) if @api_version
+    options.merge!({ :timeout => @timeout }) if @timeout
     return options
   end
 
   private
-  def get_query()
-    query = ["SELECT",@sfdc_fields.join(','),
-             "FROM",@sfdc_object_name]
-    query << ["WHERE",@sfdc_filters] unless @sfdc_filters.empty?
-    query << "ORDER BY LastModifiedDate DESC" if @sfdc_fields.include?('LastModifiedDate')
-    query_str = query.flatten.join(" ")
-    @logger.debug? && @logger.debug("SFDC Query", :query => query_str)
-    return query_str
-  end
-
-  private
-  def get_field_types(obj_desc)
-    field_types = {}
-    obj_desc.fields.each do |f|
-      field_types[f.name] = f.type
-    end
-    @logger.debug? && @logger.debug("Field types", :field_types => field_types.to_s)
-    return field_types
-  end
-
-  private
-  def get_all_fields
-    return @sfdc_field_types.keys
+  def get_sfdc_fields
+    extracted_fields = sfdc_soql_query.gsub(/SELECT (.+) FROM.+/i, '\1')
+    extracted_fields_as_array = extracted_fields.split(',').collect { |item| item.strip }
+    @logger.debug("Extracted fields: ", :extracted_fields_as_array => extracted_fields_as_array.to_s)
+    
+    return extracted_fields_as_array;
   end
 
   private

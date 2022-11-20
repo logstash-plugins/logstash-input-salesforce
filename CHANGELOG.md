@@ -1,3 +1,17 @@
+## 4.0.0
+  - refactor: Change behavior to support SOQL queries
+  - feat: Include deleted records
+
+## 3.4.0
+  - feat: Add support for plain SOQL query
+
+## 3.3.0
+  - feat: Added `timeout` configuration to control RESTForce timeout settings (defaults to `60`)
+  - feat: Added support for reference fields (`parent__r.child`)
+  - feat: Added support for built-in SOQL functions (etc. `toLabel(field__c) field`)
+  - refactor: Removed field_type inferring (elastic can infer it / logstash mapping can be configured for special cases)
+  - fix: update Apache licence to suppress compiling warning
+
 ## 3.2.0
   - Added `use_tooling_api` configuration to connect to the Salesforce Tooling API instead of the regular Rest API. [#26](https://github.com/logstash-plugins/logstash-input-salesforce/pull/26)
 
