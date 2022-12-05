@@ -72,17 +72,17 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # https://help.salesforce.com/apex/HTViewHelpDoc?id=connected_app_create.htm
   config :client_id, :validate => :string, :required => true
   # Consumer Secret from your oauth enabled connected app
-  config :client_secret, :validate => :string, :required => true
+  config :client_secret, :validate => :password, :required => true
   # A valid salesforce user name, usually your email address.
   # Used for authentication and will be the user all objects
   # are created or modified by
   config :username, :validate => :string, :required => true
   # The password used to login to sfdc
-  config :password, :validate => :string, :required => true
+  config :password, :validate => :password, :required => true
   # The security token for this account. For more information about
   # generting a security token, see:
   # https://help.salesforce.com/apex/HTViewHelpDoc?id=user_security_token.htm
-  config :security_token, :validate => :string, :required => true
+  config :security_token, :validate => :password, :required => true
   # The name of the salesforce object you are creating or updating
   config :sfdc_object_name, :validate => :string, :required => true
   # These are the field names to return in the Salesforce query
@@ -141,10 +141,10 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   def client_options
     options = {
       :username       => @username,
-      :password       => @password,
-      :security_token => @security_token,
+      :password       => @password.value,
+      :security_token => @security_token.value,
       :client_id      => @client_id,
-      :client_secret  => @client_secret
+      :client_secret  => @client_secret.value
     }
     # configure the endpoint to which restforce connects to for authentication
     if @sfdc_instance_url && @use_test_sandbox

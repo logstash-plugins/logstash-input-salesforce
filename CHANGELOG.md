@@ -1,3 +1,6 @@
+## 3.2.1
+  - Changes sensitive configs type to Password for better protection from leaks in debug logs. [#35](https://github.com/logstash-plugins/logstash-input-salesforce/pull/35)
+
 ## 3.2.0
   - Added `use_tooling_api` configuration to connect to the Salesforce Tooling API instead of the regular Rest API. [#26](https://github.com/logstash-plugins/logstash-input-salesforce/pull/26)
 
