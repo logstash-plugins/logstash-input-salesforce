@@ -8,10 +8,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
     let(:options) do
       {
         "client_id" => "",
-        "client_secret" => "",
+        "client_secret" => ::LogStash::Util::Password.new("secret-key"),
         "username" => "",
-        "password" => "",
-        "security_token" => "",
+        "password" => ::LogStash::Util::Password.new("secret-password"),
+        "security_token" => ::LogStash::Util::Password.new("secret-token"),
         "sfdc_object_name" => ""
       }
     end
@@ -35,10 +35,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
       let(:options) do
         {
           "client_id" => "",
-          "client_secret" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
           "username" => "",
-          "password" => "",
-          "security_token" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
           "sfdc_object_name" => "Lead",
           "sfdc_fields" => ["Something"]
         }
@@ -67,10 +67,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
       let(:options) do
         {
           "client_id" => "",
-          "client_secret" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
           "username" => "",
-          "password" => "",
-          "security_token" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
           "sfdc_object_name" => "Lead"
         }
       end
@@ -94,10 +94,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
         let(:options) do
           {
             "client_id" => "",
-            "client_secret" => "",
+            "client_secret" => ::LogStash::Util::Password.new("secret-key"),
             "username" => "",
-            "password" => "",
-            "security_token" => "",
+            "password" => ::LogStash::Util::Password.new("secret-password"),
+            "security_token" => ::LogStash::Util::Password.new("secret-token"),
             "sfdc_object_name" => "Lead",
             "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
             "sfdc_filters" => "Email LIKE '%@elastic.co'"
@@ -137,10 +137,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
       let(:options) do
         {
           "client_id" => "",
-          "client_secret" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
           "username" => "",
-          "password" => "",
-          "security_token" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
           "sfdc_instance_url" => "my-domain.my.salesforce.com",
           "sfdc_object_name" => "Lead"
         }
@@ -165,10 +165,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
         let(:options) do
           {
             "client_id" => "",
-            "client_secret" => "",
+            "client_secret" => ::LogStash::Util::Password.new("secret-key"),
             "username" => "",
-            "password" => "",
-            "security_token" => "",
+            "password" => ::LogStash::Util::Password.new("secret-password"),
+            "security_token" => ::LogStash::Util::Password.new("secret-token"),
             "sfdc_instance_url" => "my-domain.my.salesforce.com",
             "sfdc_object_name" => "Lead",
             "use_test_sandbox" => true
@@ -200,10 +200,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
         {
           "api_version" => "52.0",
           "client_id" => "",
-          "client_secret" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
           "username" => "",
-          "password" => "",
-          "security_token" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
           "use_tooling_api" => true,
           "sfdc_object_name" => "ApexTestRunResult"
         }
