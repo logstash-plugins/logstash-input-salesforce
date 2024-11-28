@@ -55,10 +55,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
         config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
         config.hook_into :webmock
         config.before_record do |i|
-          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+          if i.response.body.encoding == Encoding::BINARY
             # required because sfdc doesn't send back the content encoding and it
             # confuses the yaml parser
-            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            json_body = JSON.load(i.response.body.encode(Encoding::BINARY).force_encoding(Encoding::UTF_8))
             i.response.body = json_body.to_json
             i.response.update_content_length_header
           end
@@ -125,10 +125,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
         config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
         config.hook_into :webmock
         config.before_record do |i|
-          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+          if i.response.body.encoding == Encoding::BINARY
             # required because sfdc doesn't send back the content encoding and it
             # confuses the yaml parser
-            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            json_body = JSON.load(i.response.body.encode(Encoding::BINARY).force_encoding(Encoding::UTF_8))
             i.response.body = json_body.to_json
             i.response.update_content_length_header
           end
@@ -187,10 +187,10 @@ RSpec.describe LogStash::Inputs::Salesforce do
         config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
         config.hook_into :webmock
         config.before_record do |i|
-          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+          if i.response.body.encoding == Encoding::BINARY
             # required because sfdc doesn't send back the content encoding and it
             # confuses the yaml parser
-            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            json_body = JSON.load(i.response.body.encode(Encoding::BINARY).force_encoding(Encoding::UTF_8))
             i.response.body = json_body.to_json
             i.response.update_content_length_header
           end
