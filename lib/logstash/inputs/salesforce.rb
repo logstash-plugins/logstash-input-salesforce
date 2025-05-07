@@ -111,6 +111,25 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
   # Setting this to true will convert SFDC's NamedFields__c to named_fields__c
   config :to_underscores, :validate => :boolean, :default => false
 
+  # File that stores the tracking field's latest value. This is read before querying data to interpolate
+  # the tracking field value into the incremental_filter, and the latest value of the tracking field is written
+  # to it after all the query results have been read.
+  config :tracking_field_value_file, :validate => :string, :required => false
+
+  # Filter clause to use for incremental retrieval and indexing of data that has changed since the last invodation 
+  # of the plugin. This is combined with sfdc_filters using the AND operator, if tracking_field_value_path exists. 
+  # String interpolation is applied to replace "%{last_tracking_field_value}" in this string with the value read 
+  # from tracking_field_value_file. This would usually be something like "tracking_field > '%{last_tracking_field_value}'" 
+  # where tracking_field is the API name of the actual tracking field set using the tracking_field configuration property, 
+  # e.g. LastModifiedDate
+  config :changed_data_filter, :validate => :string, :required => false
+
+  # The field from which the last value will be stored in the tracking_field_value_file and interpolated
+  # for "%{last_tracking_field_value}" in the changed_data_filter expression. This field will also be used in an ORDER BY
+  # clause added to the query, with sorting done ascending, so that the last value in the results is also the
+  # highest.
+  config :tracking_field, :validate => :string, :required => false
+
   # Interval to run the command. Value is in seconds. If no interval is given,
   # this plugin only fetches data once.
   config :interval, :validate => :number, :required => false, :default => -1
@@ -128,6 +147,7 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
     while !stop?
       start = Time.now
       results = client.query(get_query())
+      latest_tracking_field_value = nil
       if results && results.first
         results.each do |result|
           event = LogStash::Event.new()
@@ -136,7 +156,7 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
             field_type = @sfdc_field_types[field]
             value = result.send(field)
             event_key = @to_underscores ? underscore(field) : field
-            if not value.nil?
+            unless value.nil?
               case field_type
               when 'datetime', 'date'
                 event.set(event_key, format_time(value))
@@ -146,8 +166,20 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
             end
           end
           queue << event
+          unless @tracking_field.nil?
+            latest_tracking_field_value = result[@tracking_field]
+          end
+        end # loop sObjects
+      end
+
+      unless @tracking_field_value_file.nil?
+        unless latest_tracking_field_value.nil?
+          @logger.debug("Writing latest tracking field value " + latest_tracking_field_value + " to " + @tracking_field_value_file)
+          File.write(@tracking_field_value_file, latest_tracking_field_value)
+        else
+          @logger.debug("No tracking field value found in result, not updating " + @tracking_field_value_file)
         end
-      end # loop sObjects
+      end
 
       if @interval == -1
         break
@@ -199,13 +231,41 @@ class LogStash::Inputs::Salesforce < LogStash::Inputs::Base
 
   private
   def get_query()
-    query = ["SELECT", @sfdc_fields.join(','),
+    sfdc_fields = @sfdc_fields.dup
+    unless @tracking_field.nil?
+      unless sfdc_fields.include?(@tracking_field)
+        sfdc_fields << [@tracking_field]
+      end
+    end
+    query = ["SELECT", sfdc_fields.join(','),
              "FROM", @sfdc_object_name]
-    query << ["WHERE", @sfdc_filters] unless @sfdc_filters.empty?
-    query << "ORDER BY LastModifiedDate DESC" if @sfdc_fields.include?('LastModifiedDate')
+    where = []
+    unless @sfdc_filters.empty?
+      append_to_where_clause(@sfdc_filters, where)
+    end
+    unless @changed_data_filter.nil?
+      if File.exist?(@tracking_field_value_file)
+        last_tracking_field_value = File.read(@tracking_field_value_file)
+        changed_data_filter_interpolated = @changed_data_filter % { :last_tracking_field_value => last_tracking_field_value }
+        append_to_where_clause(changed_data_filter_interpolated, where)
+      end
+    end
+    query << where
+    unless @tracking_field.nil?
+      query << ["ORDER BY", @tracking_field, "ASC"]
+    end
     query_str = query.flatten.join(" ")
     @logger.debug? && @logger.debug("SFDC Query", :query => query_str)
     return query_str
+  end
+
+  def append_to_where_clause(changed_data_filter_interpolated, where)
+    if where.empty?
+      where << ["WHERE"]
+    else
+      where << ["AND"]
+    end
+    where << [changed_data_filter_interpolated]
   end
 
   private
