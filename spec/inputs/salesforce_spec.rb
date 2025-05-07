@@ -263,5 +263,219 @@ RSpec.describe LogStash::Inputs::Salesforce do
         end
       end
     end
+
+    context "run with last modified time from range field file" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
+          "username" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
+          "use_tooling_api" => false,
+          "sfdc_object_name" => "Lead",
+          "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
+          "sfdc_filters" => "Email LIKE '%@elastic.co'",
+          "changed_data_filter" => "LastModifiedDate > %{last_tracking_field_value}",
+          "tracking_field_value_file" => "last_tracking_field_value.txt"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      let(:queue) { [] }
+      it "loads some lead records modified after 2025-05-07 14:32:17 UTC" do
+        VCR.use_cassette("load some lead objects with lastmodifieddate filter", :decode_compressed_response => true) do
+          subject.register
+          File.write("last_tracking_field_value.txt", "2025-05-07T14:32:17Z")
+          subject.run(queue)
+          expect(queue.length).to eq(3)
+        end
+      end
+    end
+
+    context "run with last modified time from range field file when file doesn't yet exist" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
+          "username" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
+          "use_tooling_api" => false,
+          "sfdc_object_name" => "Lead",
+          "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
+          "sfdc_filters" => "Email LIKE '%@elastic.co'",
+          "changed_data_filter" => "LastModifiedDate > %{last_tracking_field_value}",
+          "tracking_field_value_file" => "last_tracking_field_value.txt"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      let(:queue) { [] }
+      it "loads some lead records" do
+        VCR.use_cassette("load some lead objects", :decode_compressed_response => true) do
+          subject.register
+          File.exist?("last_tracking_field_value.txt") && File.delete("last_tracking_field_value.txt")
+          subject.run(queue)
+          expect(queue.length).to eq(3)
+        end
+      end
+    end
+
+    context "run with last modified time from range field file with range field" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
+          "username" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
+          "use_tooling_api" => false,
+          "sfdc_object_name" => "Lead",
+          "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
+          "sfdc_filters" => "Email LIKE '%@elastic.co'",
+          "tracking_field" => "LastModifiedDate",
+          "changed_data_filter" => "LastModifiedDate > %{last_tracking_field_value}",
+          "tracking_field_value_file" => "last_tracking_field_value.txt"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      let(:queue) { [] }
+      it "loads some lead records modified after 2025-05-07 14:32:17 UTC" do
+        VCR.use_cassette("load some lead objects with lastmodifieddate filter order by lastmodifieddate", :decode_compressed_response => true) do
+          subject.register
+          File.write("last_tracking_field_value.txt", "2025-05-07T14:32:17Z")
+          subject.run(queue)
+          expect(queue.length).to eq(3)
+        end
+      end
+    end
+
+    context "run with last modified time from range field file with range field and no other filters" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
+          "username" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
+          "use_tooling_api" => false,
+          "sfdc_object_name" => "Lead",
+          "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
+          "tracking_field" => "LastModifiedDate",
+          "changed_data_filter" => "LastModifiedDate > %{last_tracking_field_value}",
+          "tracking_field_value_file" => "last_tracking_field_value.txt"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      let(:queue) { [] }
+      it "loads some lead records modified after 2025-05-07 14:32:17 UTC" do
+        VCR.use_cassette("load some lead objects with lastmodifieddate filter order by lastmodifieddate no filters", :decode_compressed_response => true) do
+          subject.register
+          File.write("last_tracking_field_value.txt", "2025-05-07T14:32:17Z")
+          subject.run(queue)
+          expect(queue.length).to eq(3)
+        end
+      end
+    end
+
+    context "run with last modified time from range field file when file doesn't yet exist with range field" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
+          "username" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
+          "use_tooling_api" => false,
+          "sfdc_object_name" => "Lead",
+          "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
+          "sfdc_filters" => "Email LIKE '%@elastic.co'",
+          "tracking_field" => "LastModifiedDate",
+          "changed_data_filter" => "LastModifiedDate > %{last_tracking_field_value}",
+          "tracking_field_value_file" => "last_tracking_field_value.txt"
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      let(:queue) { [] }
+      it "loads some lead records" do
+        VCR.use_cassette("load some lead objects order by lastmodifieddate", :decode_compressed_response => true) do
+          subject.register
+          File.exist?("last_tracking_field_value.txt") && File.delete("last_tracking_field_value.txt")
+          subject.run(queue)
+          expect(queue.length).to eq(3)
+          tracking_field_value = File.read("last_tracking_field_value.txt")
+          expect(tracking_field_value).to eq("2025-05-07T14:32:17Z")
+        end
+      end
+    end
   end
 end
