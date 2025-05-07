@@ -84,7 +84,7 @@ RSpec.describe LogStash::Inputs::Salesforce do
                                      ["Salutation", "picklist"]] }
       subject { input }
       it "loads the Lead object fields" do
-        VCR.use_cassette("describe_lead_object",:decode_compressed_response => true) do
+        VCR.use_cassette("describe lead object",:decode_compressed_response => true) do
           subject.register
           expect(subject.instance_variable_get(:@sfdc_field_types)).to match_array(expected_types_result)
           expect(subject.instance_variable_get(:@sfdc_fields)).to match_array(expected_fields_result)
@@ -107,7 +107,7 @@ RSpec.describe LogStash::Inputs::Salesforce do
         subject { input }
         let(:queue) { [] }
         it "loads some lead records" do
-          VCR.use_cassette("load some lead objects",:decode_compressed_response => true) do
+          VCR.use_cassette("load some lead objects", :decode_compressed_response => true) do
             subject.register
             subject.run(queue)
             expect(queue.length).to eq(3)
@@ -155,7 +155,7 @@ RSpec.describe LogStash::Inputs::Salesforce do
                                      ["Salutation", "picklist"]] }
       subject { input }
       it "logs into sfdc instance url" do
-        VCR.use_cassette("login_into_mydomain", :decode_compressed_response => true) do
+        VCR.use_cassette("login into mydomain", :decode_compressed_response => true) do
           subject.register
           expect(subject.instance_variable_get(:@sfdc_field_types)).to match_array(expected_types_result)
           expect(subject.instance_variable_get(:@sfdc_fields)).to match_array(expected_fields_result)
@@ -211,9 +211,55 @@ RSpec.describe LogStash::Inputs::Salesforce do
       let(:input) { LogStash::Inputs::Salesforce.new(options) }
       subject { input }
       it "should use the Tooling Api Query resource path" do
-        VCR.use_cassette("describe_apex_test_run_result_object",:decode_compressed_response => true) do
+        VCR.use_cassette("describe apex test run result object", :decode_compressed_response => true) do
           subject.register
           expect(subject.send(:client).send(:api_path, "query")).to eq('/services/data/v52.0/tooling/query')
+        end
+      end
+    end
+
+    context "run continuously at interval" do
+      VCR.configure do |config|
+        config.cassette_library_dir = File.join(File.dirname(__FILE__), '..', 'fixtures', 'vcr_cassettes')
+        config.hook_into :webmock
+        config.before_record do |i|
+          if i.response.body.encoding.to_s == 'ASCII-8BIT'
+            # required because sfdc doesn't send back the content encoding and it
+            # confuses the yaml parser
+            json_body = JSON.load(i.response.body.encode("ASCII-8BIT").force_encoding("utf-8"))
+            i.response.body = json_body.to_json
+            i.response.update_content_length_header
+          end
+        end
+      end
+      let(:options) do
+        {
+          "client_id" => "",
+          "client_secret" => ::LogStash::Util::Password.new("secret-key"),
+          "username" => "",
+          "password" => ::LogStash::Util::Password.new("secret-password"),
+          "security_token" => ::LogStash::Util::Password.new("secret-token"),
+          "use_tooling_api" => false,
+          "sfdc_object_name" => "Lead",
+          "sfdc_fields" => ["Id", "IsDeleted", "LastName", "FirstName", "Salutation"],
+          "sfdc_filters" => "Email LIKE '%@elastic.co'",
+          "interval" => 3
+        }
+      end
+      let(:input) { LogStash::Inputs::Salesforce.new(options) }
+      subject { input }
+      let(:queue) { [] }
+      it "loads some lead records" do
+        VCR.use_cassette("load some lead objects twice", :decode_compressed_response => true) do
+          subject.register
+          # Run a background thread to set the stop flag after 7 seconds, i.e. after the second run of the plugin
+          thr = Thread.new {
+            sleep(4)  # more than 3, less than 6
+            subject.do_stop
+          }
+          subject.run(queue)
+          thr.join
+          expect(queue.length).to eq(8) # 3 + 5
         end
       end
     end
