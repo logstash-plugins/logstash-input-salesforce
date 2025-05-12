@@ -77,6 +77,7 @@ This plugin supports the following configuration options plus the <<plugins-{typ
 | <<plugins-{type}s-{plugin}-api_version>> |<<string,string>>|No
 | <<plugins-{type}s-{plugin}-client_id>> |<<string,string>>|Yes
 | <<plugins-{type}s-{plugin}-client_secret>> |<<password,password>>|Yes
+| <<plugins-{type}s-{plugin}-interval>> |<<number,number>>|No
 | <<plugins-{type}s-{plugin}-password>> |<<password,password>>|Yes
 | <<plugins-{type}s-{plugin}-security_token>> |<<password,password>>|Yes
 | <<plugins-{type}s-{plugin}-sfdc_fields>> |<<array,array>>|No
@@ -124,8 +125,25 @@ https://help.salesforce.com/apex/HTViewHelpDoc?id=connected_app_create.htm
 
 Consumer Secret from your oauth enabled connected app
 
+[id="plugins-{type}s-{plugin}-interval"]
+===== `interval`
+
+  * Value type is <<number,number>>
+  * There is no default value for this setting.
+
+The interval in seconds between each run of the plugin.
+
+If specified, the plugin only terminates when it receives the stop
+signal from Logstash, e.g. when you press Ctrl-C when running interactively,
+or when the process receives a TERM signal. It will query and publish
+events for all results, then sleep until `interval` seconds from the start
+of the previous run of the plugin have passed. If the plugin ran for longer
+than `interval` seconds, it will run again immediately.
+
+If this property is not specified or is set to -1, the plugin will run once and then exit.
+
 [id="plugins-{type}s-{plugin}-password"]
-===== `password` 
+===== `password`
 
   * This is a required setting.
   * Value type is <<password,password>>
