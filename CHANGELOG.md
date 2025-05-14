@@ -1,3 +1,9 @@
+## 3.3.0
+  - Added `timeout` configuration to override the connect/read timeout for REST requests to Salesforce
+  - Added `interval` configuration to run the plugin continuously, querying records and publishing events 
+    for them at a set interval instead of running once and quitting
+  - Added incremental data loading feature, controlled by configuration options `tracking_field`, `tracking_field_value_file`, and `changed_data_filter`
+
 ## 3.2.1
   - Changes sensitive configs type to Password for better protection from leaks in debug logs. [#35](https://github.com/logstash-plugins/logstash-input-salesforce/pull/35)
 

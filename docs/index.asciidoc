@@ -25,14 +25,15 @@ This Logstash input plugin allows you to query Salesforce using SOQL and puts th
 into Logstash, one row per event. You can configure it to pull entire sObjects or only
 specific fields.
 
-NOTE: This input plugin will stop after all the results of the query are processed and will
-need to be re-run to fetch new results. It does not utilize the streaming API.
+NOTE: By default, this input plugin will stop after all the results of the query are processed and will
+need to be re-run to fetch new results. It does not utilize the streaming API. However, by setting the `interval`
+configuration option you can configure the plugin to automatically run at a set frequency.
 
-In order to use this plugin, you will need to create a new SFDC Application using
-oauth. More details can be found here:
+In order to use this plugin, you will need to create a new Salesforce Connected App with OAuth enabled.
+More details can be found here:
 https://help.salesforce.com/apex/HTViewHelpDoc?id=connected_app_create.htm
 
-You will also need a username, password, and security token for your salesforce instance.
+You will also need a username, password, and security token for your Salesforce instance.
 More details for generating a token can be found here:
 https://help.salesforce.com/apex/HTViewHelpDoc?id=user_security_token.htm
 
@@ -127,8 +128,11 @@ type.
 
 **Examples:**
 
-  "changed_data_filter" => "Number > '%{last_tracking_field_value}'"
-  "changed_data_filter" => "LastModifiedDate >= %{last_tracking_field_value}"
+[source,ruby]
+"changed_data_filter" => "Number > '%{last_tracking_field_value}'"
+
+[source,ruby]
+"changed_data_filter" => "LastModifiedDate >= %{last_tracking_field_value}"
 
 [id="plugins-{type}s-{plugin}-client_id"]
 ===== `client_id` 
