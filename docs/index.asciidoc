@@ -117,7 +117,7 @@ To override this, set this to something like "32.0" for example.
 
 The filter to add to the Salesforce query when a previous tracking field value
 was read from the <<plugins-{type}s-{plugin}-tracking_field_value_file>>.
-The string can (and should) contain a placeholder `%+{last_tracking_field_value}+` that
+The string can (and should) contain a placeholder `%{last_tracking_field_value}` that
 will be substituted with the actual value read from the <<plugins-{type}s-{plugin}-tracking_field_value_file>>.
 
 This clause is combined with any <<plugins-{type}s-{plugin}-sfdc_filters>>
