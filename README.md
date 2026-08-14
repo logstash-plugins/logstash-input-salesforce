@@ -1,5 +1,7 @@
 # Logstash Salesforce input Plugin
 
+[![Unit Tests](https://github.com/logstash-plugins/logstash-input-salesforce/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/logstash-plugins/logstash-input-salesforce/actions/workflows/unit-tests.yml)
+
 This Logstash input plugin allows you to query Salesforce using SOQL and puts the results
 into Logstash, one row per event. You can configure it to pull entire sObjects or only
 specific fields.
